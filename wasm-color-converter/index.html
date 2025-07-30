@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RGB to HSL Converter</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+        .color-box { width: 100px; height: 100px; margin: 10px auto; border: 1px solid #000; }
+        .sliders { margin: 20px 0; }
+        .slider-container { margin: 10px 0; }
+        .result { margin-top: 20px; padding: 10px; background: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <h1>RGB to HSL Converter with WebAssembly</h1>
+    
+    <div class="color-box" id="colorBox"></div>
+    
+    <div class="sliders">
+        <div class="slider-container">
+            <label for="red">Red:</label>
+            <input type="range" id="red" min="0" max="255" value="128">
+            <span id="redValue">128</span>
+        </div>
+        <div class="slider-container">
+            <label for="green">Green:</label>
+            <input type="range" id="green" min="0" max="255" value="128">
+            <span id="greenValue">128</span>
+        </div>
+        <div class="slider-container">
+            <label for="blue">Blue:</label>
+            <input type="range" id="blue" min="0" max="255" value="128">
+            <span id="blueValue">128</span>
+        </div>
+    </div>
+    
+    <div class="result">
+        <h3>HSL Values:</h3>
+        <p>Hue: <span id="hue">0</span>°</p>
+        <p>Saturation: <span id="saturation">0</span>%</p>
+        <p>Lightness: <span id="lightness">0</span>%</p>
+    </div>
+
+    <script type="module">
+        import init from './color_converter.js';
+        
+        async function run() {
+            try {
+                const module = await init();
+                
+                function updateColor() {
+                    const r = parseInt(document.getElementById('red').value);
+                    const g = parseInt(document.getElementById('green').value);
+                    const b = parseInt(document.getElementById('blue').value);
+                    
+                    // Update RGB display
+                    document.getElementById('redValue').textContent = r;
+                    document.getElementById('greenValue').textContent = g;
+                    document.getElementById('blueValue').textContent = b;
+                    
+                    // Update color box
+                    document.getElementById('colorBox').style.backgroundColor = 
+                        `rgb(${r}, ${g}, ${b})`;
+                    
+                    // Call our WASM function
+                    const hsl = module.rgbToHsl(r, g, b);
+                    
+                    // Update HSL display
+                    document.getElementById('hue').textContent = hsl.h.toFixed(1);
+                    document.getElementById('saturation').textContent = hsl.s.toFixed(1);
+                    document.getElementById('lightness').textContent = hsl.l.toFixed(1);
+                }
+                
+                // Set up event listeners
+                document.getElementById('red').addEventListener('input', updateColor);
+                document.getElementById('green').addEventListener('input', updateColor);
+                document.getElementById('blue').addEventListener('input', updateColor);
+                
+                // Initial update
+                updateColor();
+            } catch (error) {
+                console.error("Error initializing WASM module:", error);
+                alert("Failed to load WebAssembly module. Check console for details.");
+            }
+        }
+        
+        run();
+    </script>
+</body>
+</html>
